@@ -45,17 +45,15 @@
   ([x y & zs]
    ()))
 
-(defn dim-count
-  [m dim]
+(defn ->dimensions
+  [m]
   (loop [dim-rows m
-         index    0]
-    (let [termination? (= index dim)
-          rows-seq?    (sequential? dim-rows)]
-      (if (= index dim)
-        (if rows-seq? (count dim-rows) 0)
-        (if-not rows-seq? 0 (recur
-                              (first dim-rows)
-                              (inc index)))))))
+         acc      []]
+    (if-not (sequential? dim-rows)
+      acc
+      (recur
+        (first dim-rows)
+        (conj acc (count dim-rows))))))
 
 (defn transpose
   [x]
