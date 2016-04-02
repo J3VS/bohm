@@ -30,6 +30,10 @@
     (when (every? #(= first-col (count %)) x)
       first-col)))
 
+(defn mvector?
+  [x]
+  (= (columns x) 1))
+
 (defn mval
   [x i j]
   (get-in x [i j]))
@@ -56,7 +60,7 @@
 (defn equal-size
   [x y]
   (and (= (rows x) (rows y))
-             (= (columns x) (columns y))))
+       (= (columns x) (columns y))))
 
 (defn madd
   [x y]
@@ -114,7 +118,18 @@
       (->> c
            range
            (map (fn [col]
-                  (* (mval x 0 col) (Math/pow -1 col) (determinant (mrest x 0 col)))))
+                  (-> x
+                      (mrest 0 col)
+                      determinant
+                      (or 0)
+                      (* (mval x 0 col) (Math/pow -1 col)))))
            (apply +)))))
 
-
+(defn inner-product
+  [x y]
+  (when (and (mvector? x)
+             (mvector? y)
+             (= (rows x) (rows y)))
+    (matrix-skeleton (fn [i j]
+                       (* (mval x i j)
+                          (mval y i j))) (rows x) 1)))
