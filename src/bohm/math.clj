@@ -20,48 +20,65 @@
        (concat [x1])
        (mapv vector)))
 
-(defn *-dispatch
-  [& xis]
-  (cond
-    (empty? xis)         :identity
-    (= (count xis) 1)    :single
-    (every? vector? xis) :matrix
-    (every? number? xis) :number
-    :else                :mix))
-
-(defmulti * *-dispatch)
-
-(defmethod * :identity
-  []
-  1)
-
-(defmethod * :single
+(defn rows
   [x]
-  x)
+  (count x))
 
-(defmethod * :matrix
-  ([x y]
-   ())
-  ([x y & zs]
-   ()))
+(defn columns
+  [x]
+  (let [first-col (count (first x))]
+    (when (every? #(= first-col (count %)) x)
+      first-col)))
 
-(defn ->dimensions
-  [m]
-  (loop [dim-rows m
-         acc      []]
-    (if-not (sequential? dim-rows)
-      acc
-      (recur
-        (first dim-rows)
-        (conj acc (count dim-rows))))))
+(defn mmult-entry
+  [a b row-index column-index]
+  (->> a
+       columns
+       range
+       (mapv #(* (get-in a [row-index %])
+                (get-in b [% column-index])))
+       (reduce +)))
+
+(defn matrix-skeleton
+  [func i j]
+  (mapv (fn [ix]
+          (mapv (fn [jx]
+                  (func ix jx)) (range j))) (range i)))
+
+(defn mmult
+  [x y]
+  (matrix-skeleton (partial mmult-entry x y) (rows x) (columns y)))
+
+(defn equal-size
+  [x y]
+  (and (= (rows x) (rows y))
+             (= (columns x) (columns y))))
+
+(defn madd
+  [x y]
+  (when (equal-size x y)
+    (matrix-skeleton (fn [i j]
+                       (+ (get-in x [i j]) (get-in y [i j]))) (rows x) (columns x))))
+
+(defn msubtract
+  [x y]
+  (when (equal-size x y)
+    (matrix-skeleton (fn [i j]
+                       (- (get-in x [i j]) (get-in y [i j]))) (rows x) (columns x))))
+
 
 (defn transpose
   [x]
-  )
+  (if-let [cols (columns x)]
+    (matrix-skeleton (fn [i j]
+                       (get-in x [j i])) cols (rows x))))
 
-(defmethod * :number
-  ([x y]
-   (core/* x y))
-  ([x y & zs]
-   (apply core/* (concat [x] [y] zs))))
 
+(defn square?
+  [x]
+  (= (rows x) (columns x)))
+
+(defn determinant
+  [x]
+  (let [row-count (rows x)
+        col-count (columns x)]))
