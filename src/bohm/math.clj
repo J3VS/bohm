@@ -112,18 +112,21 @@
 (defn determinant
   [x]
   (if-let [[r c] (square? x)]
-    (if (= r c 2)
-      (- (* (mval x 0 0) (mval x 1 1))
-         (* (mval x 1 0) (mval x 0 1)))
-      (->> c
-           range
-           (map (fn [col]
-                  (-> x
-                      (mrest 0 col)
-                      determinant
-                      (or 0)
-                      (* (mval x 0 col) (Math/pow -1 col)))))
-           (apply +)))))
+    (-> x
+        cl/matrix
+        cl/det)))
+
+(defn clatrix->vv
+  [cla]
+  (matrix-skeleton (fn [i j]
+                     (cl/get cla i j)) (cl/nrows cla) (cl/ncols cla)))
+
+(defn inverse
+  [x]
+  (-> x
+      cl/matrix
+      cl/i
+      clatrix->vv))
 
 (defn inner-product
   [x y]
