@@ -136,3 +136,14 @@
     (matrix-skeleton (fn [i j]
                        (* (mval x i j)
                           (mval y i j))) (rows x) 1)))
+
+(defn eigen
+  [m]
+  (let [{:keys [values vectors]} (-> m
+                                     cl/matrix
+                                     cl/eigen)]
+    (map-indexed (fn [ind v]
+                   {:value v
+                    :vector (->> vectors
+                                 (mapv #(nth % ind))
+                                 cl/matrix)}) values)))
